@@ -1,18 +1,19 @@
 # Python To-Do List Project
 
-A simple terminal-based To-Do List application.
+This is a simple To-Do List application written in Python.
 
 ## Features
 
 - Add tasks
-- List tasks (numbered)
-- Delete tasks
-- Exit the program
+- List tasks with Done/Not Done status
+- Delete tasks 🗑️
+- Mark tasks as Done ✅
+- Tasks are saved to a JSON file and loaded on program start
 
-## How to Use
+## How to Run
 
-1. Make sure Python 3 is installed.
-2. Open a terminal (or VS Code terminal) in the project folder.
-3. Run the program:
-   ```bash
-   python todo.py
+1. Make sure you have Python installed.
+2. Run the program:
+
+```bash
+python todo.py
