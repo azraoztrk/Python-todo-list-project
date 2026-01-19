@@ -1,5 +1,7 @@
 import sqlite3
 
+deleted_duty_stack = []
+
 def connect_db():
     return sqlite3.connect("duties.db")
 
@@ -13,19 +15,20 @@ def create_table(cursor):
 """)
 
 def show_menu():
-    print('1-Add Task')
-    print('2-List Task')
-    print('3-Delete Task')
-    print("4-Mark Task Done")
-    print('5-Exit')
+    print('1-Add Duty')
+    print('2-List Duty')
+    print('3-Delete Duty')
+    print("4-Mark Duty Done")
+    print(f'5-Undelete The Last Deleted Duty. ({len(deleted_duty_stack)} available)')
+    print("6-Exit")
 
-def add_task(cursor, conn):
+def add_duty(cursor, conn):
     get_text = input('Enter a duty: ')
     cursor.execute("""INSERT INTO duties (duty, done) VALUES (?, ?)""", (get_text, "Not Done"))
     conn.commit()
     print('Duty Added Successfuly!\n')
 
-def list_tasks(cursor):
+def list_duty(cursor):
     cursor.execute("SELECT id, duty, done FROM duties")
     duties = cursor.fetchall()
 
@@ -36,16 +39,39 @@ def list_tasks(cursor):
             print(f"{duty[0]}: {duty[1]} - {duty[2]}\n")
         print("\n")
 
-def delete_task(cursor, conn):
+def delete_duty(cursor, conn):
     try:
         deleteInput = int(input('Enter a duty number to delete: '))
+        
+        cursor.execute("SELECT duty, done FROM duties WHERE id = ?", (deleteInput,))
+        duty = cursor.fetchone()
+
+        if duty is None:
+            print("Duty not found.\n")
+            return
+        
+        deleted_duty_stack.append(duty)
+
         cursor.execute("DELETE FROM duties WHERE id = ?", (deleteInput,))
         conn.commit()
         print('Duty deleted successfuly!\n') 
-    except:
+    except ValueError:
         print("Please enter a valid number!\n")
 
-def mark_task_done(cursor, conn):
+def undelete_duty(cursor, conn):
+    #stack’te tutulan son silinen görevi geri almak için yazıldı.
+    if not deleted_duty_stack:
+        print("Nothing to undelete.")
+        return
+    
+    duty = deleted_duty_stack.pop()
+
+    cursor.execute("INSERT INTO duties (duty, done) VALUES (?, ?)", (duty[0], duty[1]))
+    conn.commit()
+
+    print(f"Restored duty: '{duty[0]}'\n")
+
+def mark_duty_done(cursor, conn):
     try:
         markDoneInput = int(input("Enter the task number to mark as done: "))
         cursor.execute("UPDATE duties SET done = 'Done ✅' WHERE id = ?", (markDoneInput,))
@@ -62,24 +88,27 @@ def main():
     while True:
         show_menu()
         try:
-            userInput = int(input('Choose one of them(1-5): '))
+            userInput = int(input('Choose one of them(1-6): '))
         except ValueError:
             print("Please enter a valid number!")
             continue
 
         if userInput == 1:
-            add_task(cursor, conn)
+            add_duty(cursor, conn)
 
         elif userInput == 2:
-            list_tasks(cursor)
+            list_duty(cursor)
 
         elif userInput == 3:
-            delete_task(cursor, conn)
+            delete_duty(cursor, conn)
 
         elif userInput == 4:
-            mark_task_done(cursor, conn)
+            mark_duty_done(cursor, conn)
 
         elif userInput == 5:
+            undelete_duty(cursor, conn)
+
+        elif userInput == 6:
             conn.close()
             print("Goodbye 👋")
             break
